@@ -5,7 +5,7 @@ import Queue
 import json
 import random
 
-from PIL import Image
+#from PIL import Image
 
 import client_bot
 import training_bot
@@ -86,6 +86,8 @@ class Game(object):
     y_size = 2000
     game_length = 2
     def __init__(self, client_bots, bot_1, bot_2):
+        bot_1.send_data({"state":"in_game"})
+        bot_2.send_data({"state":"in_game"})
         self.client_bots = client_bots
         bots = [bot_1, bot_2]
         random.shuffle(bots)
