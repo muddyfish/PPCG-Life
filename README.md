@@ -84,7 +84,7 @@ You're probably going to want to write a client. Here's how:
 
 1. Connect to the central arena server.
   - Host `pyke.catbus.co.uk`
-  - Port `9999`
+  - Port `7777`
 2. Wait until server responds with `{'state': 'connecting'}`
 3. Send identification `{"author": "PPCG Username", "name": "Awesome Bot!"}`
 4. Wait until server responds with `{'state': 'config'}`
