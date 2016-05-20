@@ -84,7 +84,8 @@ class Board(object):
 class Game(object):
     x_size = 2000
     y_size = 2000
-    game_length = 2
+    game_length = 60
+    round_time = 0.1
     def __init__(self, client_bots, bot_1, bot_2):
         bot_1.send_data({"state":"in_game"})
         bot_2.send_data({"state":"in_game"})
@@ -116,7 +117,8 @@ class Game(object):
         print("SETUP GAME", self.bot_1.name, self.bot_2.name)
         setup_data = {"x_size":Game.x_size,
                       "y_size":Game.y_size,
-                      "game_time":Game.game_length}
+                      "game_time":Game.game_length,
+                      "response_time":Game.round_time}
         self.bot_1.send_data({"setup_game":setup_data})
         self.bot_2.send_data({"setup_game":setup_data})
         self.setup_board()
@@ -129,29 +131,35 @@ class Game(object):
         self.board = Board(self.x_size, self.y_size)         
 
     def tick(self):
-        self.bot_1.get_move()
-        while not self.bot_1.updated:pass
-        self.bot_2.move_data(self.bot_1.move)
-        self.board.update(self.bot_1.move, 1)
-        self.bot_2.get_move()
-        while not self.bot_2.updated:pass
-        self.bot_1.move_data(self.bot_1.move)
-        self.board.update(self.bot_2.move, 2)
+        self.bot_2.move_data(self.get_move(self.bot_1,1))
+        self.bot_1.move_data(self.get_move(self.bot_2,2))
         self.bot_1.tick_board()
         self.bot_2.tick_board()
         #self.board.save("board_%s.png"%(self.tick_id))
         self.board.tick()
         self.tick_id += 1
+    
+    def get_move(self, bot, bid):
+        bot.get_move()
+        start_time = time.time()
+        while not bot.updated and time.time()<start_time+Game.round_time:pass
+        if time.time()>=start_time+Game.round_time and not bot.updated:
+            print"Timeout"
+            return []
+        self.board.update(bot.move, bid)
+        return bot.move
         
     def end_disconnect(self):
         self.ended = True
+        self.kill_trainer()
         if self.bot_1.state == self.bot_1.DISCONNECTED:
             self.bot_2.inc_wins(self.bot_1)
+            self.bot_1.disconnect()
+            self.bot_2.goto_lobby()
         if self.bot_2.state == self.bot_1.DISCONNECTED:
             self.bot_1.inc_wins(self.bot_2)
-        self.kill_trainer()
-        self.bot_1.goto_lobby()
-        self.bot_2.goto_lobby()
+            self.bot_2.disconnect()
+            self.bot_1.goto_lobby()
     
     def end_time(self):
         self.ended = True

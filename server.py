@@ -44,7 +44,6 @@ class ClientRequestHandler(SocketServer.BaseRequestHandler):
     
     def finish(self):
         self.out_queue.put(("disconnect", ""))
-    
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     daemon_threads = True
@@ -63,21 +62,8 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         for bot in self.client_bots:
             bot.in_queue.put(data)
 
-def run_clients(client_bots):
-    while True:
-        for bot in client_bots:
-            if not bot.out_queue.empty():
-                try:
-                    bot.on_data()
-                except Exception, e:
-                    print "--- Start bot exception ---"
-                    traceback.print_exc()
-                    print "--- End bot exception ---"
-                    bot.disconnect()
-                    client_bots.remove(bot)
-
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "0.0.0.0", 7777
 
     client_bots = []
     server = ThreadedTCPServer((HOST, PORT), client_bots)
@@ -86,11 +72,6 @@ if __name__ == "__main__":
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
     server_thread.start()
-    #Start client thread
-    client_thread = threading.Thread(target=run_clients,
-                                     args = (client_bots,))
-    client_thread.daemon = True
-    client_thread.start()
     #Start lobby thread
     lobby_thread = threading.Thread(target=lobby.Lobby,
                                     args = (client_bots,))
@@ -98,7 +79,17 @@ if __name__ == "__main__":
     lobby_thread.start()
     print "Initialised server!"
     try:
-        while 1:time.sleep(1)
+        while True:
+            for bot in client_bots:
+                if not bot.out_queue.empty():
+                    try:
+                        bot.on_data()
+                    except Exception, e:
+                        print "--- Start bot exception ---"
+                        traceback.print_exc()
+                        print "--- End bot exception ---"
+                        bot.disconnect()
+                        client_bots.remove(bot)
     finally:
         print("Stopping")
         server.shutdown()

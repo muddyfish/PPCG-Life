@@ -46,6 +46,7 @@ def client(ip, port):
     #Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((ip, port))
+    print "Connected!"
     try:
         sock.sendall(encode(json_identity))
         sock.sendall(encode(json_configure))
@@ -60,5 +61,5 @@ def client(ip, port):
 
 if __name__ == "__main__":
     # Port 0 means to select an arbitrary unused port
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "dustbunny.catbus.co.uk", 7777
     client(HOST, PORT)

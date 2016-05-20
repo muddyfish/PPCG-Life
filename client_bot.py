@@ -68,6 +68,9 @@ class ClientBot(object):
         self.goto_lobby()
                 
     def goto_lobby(self):
+        if self.state == ClientBot.DISCONNECTED:
+            self.disconnect()
+            return
         self.lobby_start_time = time.time()
         self.in_queue.put(("state", "lobby"))
         self.state = ClientBot.WAITING
