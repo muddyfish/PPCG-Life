@@ -19,93 +19,39 @@ The rules are *almost* the same as normal (B3/S23) Life:
 
 The board is a (x,y) cells square. All squares are initially dead. The borders do not wrap around (this is not a torus-shaped world) and are permanently dead.
 
-This is is a contest in the spirit of *Battlebots* and *Core Wars*. However, unlike those two, you are supposed to run your implementation on your own machine. You fight the other contestants on a central arena server.
+This is is a contest in the spirit of *Battlebots* and *Core Wars*. There is a central server that will run bots and it can be found ![here](https://github.com/muddyfish/PPCG-Life)
 
 ## Protocol
 
-The arena server speaks a simple, JSON protocol over TCP. Messages have the following format:
+The arena server speaks a simple JSON protocol communicated through argv
 
-    llllvvvvvvv...
-    ^ Length (4 byte, unsigned int)
-        ^ Values (Exactly length bytes long)
 
 Where Values is a JSON encoded string
 
-Potential keys you will recieve in Values:
+  - y_size: the maximum y coords of tiles before they vanish        
+  - x_size: the maximum x coords of tiles before they vanish
+  - board: a dictionary with keys in the form '(y,x)' and values in the form bot_id (int)
+  - bot_id: tiles in the board with this id are yours
 
- - "state"
-  - Recieved when your bot changes state
-  - Possible states are:
-    - connecting
-    - config
-    - lobby
-    - in_game
- - "get_move"
-   - Null value
-   - Recieved when the game wants to know what move you will make
- - "move_data"
-   - Update the cells to the opponents colour but only if empty
-   - Nested coords list format
-     - [[0,0], [0,1], [100,22]...]
- - "tick_board" 
-   - Tick the board by one (Apply rules)
- - "rtn_state"
-   - Internal state of your bot
-   - Only sent in reply to "get_state" command
-   - Contains:
-     - "state"
-     - "allow_training"
-     - "force_training"
-     - "author"
-     - "bot_name"
+Example
+    {"y_size":2000,"x_size":2000,"board":{},"bot_id":1}
      
-Keys you may send to the server
-  - "identity"
-    - Only in the "connecting" state
-      - "author": "CodeGolf Username",
-      - "name": "Awesome bot name!"
-  - "configure"
-    - Only in the "config" state
-      - allow_training: Boolean, will your bot go into training matches?
-      - force_training: Boolean, is your bot only going into training matches? (only if allow_training)
-      - training_timeout: Integer, How many seconds will your bot wait until going into a training match (only if allow_training and not force_training)
-  - "get_state"
-    - Ask the server about your internal state, server will reply with "rtn_state"
-  - "disconnect"
-    - Politely disconnect
-  - "update_state": update_state
-    - Send the server a list of square to turn to your colour.
+Telling the server your choice:
+    - Send the server a list of tiles to turn to your colour.
     - Only those that are empty will be changed
     - Nested coords list format
       - [[0,0], [0,1], [100,22]...]
 
-
-You're probably going to want to write a client. Here's how:
-
-1. Connect to the central arena server.
-  - Host `pyke.catbus.co.uk`
-  - Port `7777`
-2. Wait until server responds with `{'state': 'connecting'}`
-3. Send identification `{"author": "PPCG Username", "name": "Awesome Bot!"}`
-4. Wait until server responds with `{'state': 'config'}`
-5. Send configuration `{'allow_training': true, 'force_training': true}`
-6. Wait until server responds with `{'state': 'lobby'}`
-7. Wait until server responds with `{'state': 'in_game'}`
-8. Wait until server responds with `{'setup_game': {'y_size': 2000, 'x_size': 2000, 'game_time': 60}}`
-9. Create a (x_size, y_size) sized array filled with 0s
-10. Play!
-
-
-Note that the server will *not* send you the entire state of the board at any time for bandwidth reasons. You'll have to keep track of the evolving yourself. ([Here](http://rosettacode.org/wiki/Conway%27s_Game_of_Life#C) are implementations of normal *Life* in many languages. You could probably base your implementation on one of those.)
+NOTE: Your bot doesn't have to update the tiles at all - the server does the updating itself
 
 ## Competition rules
 
-* If your implementation fails to follow the protocol, you'll be disconnected - and the game will be forfeited.
+* If your implementation fails to follow the protocol, the turn it does will be forfeited; The server will assume no change in state
 * You are not allowed to willfully take advantage of a fault in the arena server.
-* Have your AI decide on moves in a sane time. Calculate strategies in advance if at all possible so you'll be able to send your next move as  fast as reasonably possible.
+* Have your AI decide on moves in a sane time. Please send your next move as  fast as reasonably possible.
 * Finally, please be nice to the server. It's there for your enjoyment.
 * Not following these rules can lead to disqualification.
 
 ## Scoring
 
-The bot with the largest KD spread, that is, the largest positive difference between the amount of wins and the amount of losses, wins.
+The bot with the most wins starting from <DATE HERE> wins

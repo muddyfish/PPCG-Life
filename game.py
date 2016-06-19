@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 import traceback
 import time
-import Queue
 import json
 import random
 
 #from PIL import Image
 
 import client_bot
-import training_bot
 
 class Board(object):
     EMPTY = 0
@@ -84,46 +82,34 @@ class Board(object):
 class Game(object):
     x_size = 2000
     y_size = 2000
-    game_length = 60
-    round_time = 0.1
-    def __init__(self, client_bots, bot_1, bot_2):
-        bot_1.send_data({"state":"in_game"})
-        bot_2.send_data({"state":"in_game"})
-        self.client_bots = client_bots
+    game_length = 3
+    
+    def __init__(self, log, bot_1, bot_2):
+        self.log = log
         bots = [bot_1, bot_2]
         random.shuffle(bots)
         self.bot_1,self.bot_2 = bots
         self.ended = False
         try:
             self.setup()
-        except Exception, e:
-            print "--- Start game setup exception ---"
+        except Exception as e:
+            self.log.write("--- Start game setup exception ---\n")
             traceback.print_exc()
-            print "--- End game setup exception ---"
-            self.end_disconnect()
+            self.log.write("--- End game setup exception ---\n")
         while not self.ended:
             try:
                 self.tick()
-            except Exception, e:
-                print "--- Start game exception ---"
+            except Exception as e:
+                self.log.write("--- Start game exception ---\n")
                 traceback.print_exc()
-                print "--- End game exception ---"
-                self.end_disconnect()
+                self.log.write("--- End game exception ---\n")
             if self.start_time + Game.game_length < time.time():
                 self.end_time()
-        print "Finished!"
+        self.log.write("Finished!\n")
 
     def setup(self):
-        print("SETUP GAME", self.bot_1.name, self.bot_2.name)
-        setup_data = {"x_size":Game.x_size,
-                      "y_size":Game.y_size,
-                      "game_time":Game.game_length,
-                      "response_time":Game.round_time}
-        self.bot_1.send_data({"setup_game":setup_data})
-        self.bot_2.send_data({"setup_game":setup_data})
+        self.log.write("SETUP GAME %s %s\n"%(self.bot_1, self.bot_2))
         self.setup_board()
-        self.bot_1.state = self.bot_1.IN_GAME
-        self.bot_2.state = self.bot_2.IN_GAME
         self.tick_id = 0
         self.start_time = time.time()
 
@@ -131,35 +117,15 @@ class Game(object):
         self.board = Board(self.x_size, self.y_size)         
 
     def tick(self):
-        self.bot_2.move_data(self.get_move(self.bot_1,1))
-        self.bot_1.move_data(self.get_move(self.bot_2,2))
-        self.bot_1.tick_board()
-        self.bot_2.tick_board()
+        self.log.write("TICK\n")
         #self.board.save("board_%s.png"%(self.tick_id))
+        self.get_move(self.bot_1, 1)
+        self.get_move(self.bot_2, 2)
         self.board.tick()
         self.tick_id += 1
     
     def get_move(self, bot, bid):
-        bot.get_move()
-        start_time = time.time()
-        while not bot.updated and time.time()<start_time+Game.round_time:pass
-        if time.time()>=start_time+Game.round_time and not bot.updated:
-            print"Timeout"
-            return []
-        self.board.update(bot.move, bid)
-        return bot.move
-        
-    def end_disconnect(self):
-        self.ended = True
-        self.kill_trainer()
-        if self.bot_1.state == self.bot_1.DISCONNECTED:
-            self.bot_2.inc_wins(self.bot_1)
-            self.bot_1.disconnect()
-            self.bot_2.goto_lobby()
-        if self.bot_2.state == self.bot_1.DISCONNECTED:
-            self.bot_1.inc_wins(self.bot_2)
-            self.bot_2.disconnect()
-            self.bot_1.goto_lobby()
+        self.board.update(bot.get_move(bid, self.board), bid)
     
     def end_time(self):
         self.ended = True
@@ -170,11 +136,3 @@ class Game(object):
             self.bot_1.inc_wins(self.bot_2)
         if locs[0] <= locs[1]:
             self.bot_2.inc_wins(self.bot_1)
-        self.kill_trainer()
-        self.bot_1.goto_lobby()
-        self.bot_2.goto_lobby()
-        
-    def kill_trainer(self):
-        for bot in (self.bot_1, self.bot_2):
-            if isinstance(bot, training_bot.TrainingBot):
-                self.client_bots.remove(bot)
