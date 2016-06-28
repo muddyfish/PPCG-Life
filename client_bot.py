@@ -25,7 +25,9 @@ class ClientBot(object):
                                 "board": loc})
         try:
             args = " ".join(self.cmd + ["'"+json_args.replace(' ','')+"'"])
-            return json.loads(subprocess.check_output(args, timeout=ClientBot.timeout).strip())
+            return json.loads(subprocess.check_output(args, timeout=ClientBot.timeout).strip())        
+        except subprocess.TimeoutExpired as e:
+            print("Timeout in bot", self)
         except Exception as e:
             self.logfile.write("An Error occured running the bot: %s\nException:\n%s\n"%(self, e))
             return {}
