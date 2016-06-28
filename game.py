@@ -3,6 +3,7 @@ import traceback
 import time
 import json
 import random
+import time
 
 #from PIL import Image
 
@@ -82,10 +83,12 @@ class Board(object):
 class Game(object):
     x_size = 2000
     y_size = 2000
-    game_length = 3
+    no_generations = 10000
     
-    def __init__(self, log, bot_1, bot_2):
-        self.log = log
+    def __init__(self, bot_1, bot_2, stop_event):
+        cur_time = str(time.time())
+        self.log = open("log_%s.log"%cur_time, "w")
+        self.stop_event = stop_event
         bots = [bot_1, bot_2]
         random.shuffle(bots)
         self.bot_1,self.bot_2 = bots
@@ -103,9 +106,10 @@ class Game(object):
                 self.log.write("--- Start game exception ---\n")
                 traceback.print_exc()
                 self.log.write("--- End game exception ---\n")
-            if self.start_time + Game.game_length < time.time():
+            if self.tick_id == Game.no_generations:
                 self.end_time()
         self.log.write("Finished!\n")
+        self.stop_event.set()
 
     def setup(self):
         self.log.write("SETUP GAME %s %s\n"%(self.bot_1, self.bot_2))
@@ -118,6 +122,7 @@ class Game(object):
 
     def tick(self):
         self.log.write("TICK\n")
+        self.log.flush()
         #self.board.save("board_%s.png"%(self.tick_id))
         self.get_move(self.bot_1, 1)
         self.get_move(self.bot_2, 2)

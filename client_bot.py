@@ -4,6 +4,7 @@ import json
 import sys, os
 
 class ClientBot(object):
+    timeout = 1
     def __init__(self, cmd):
         self.cmd = cmd
         self.bot_name = self.get_botname()
@@ -17,14 +18,14 @@ class ClientBot(object):
         self.logfile = log
 
     def run(self, bot_id, board):
-        loc = {str(key):value for key,value in board.locations.iteritems()}
+        loc = {str(key):value for key,value in board.locations.items()}
         json_args = json.dumps({"bot_id": bot_id,
                                 "x_size": board.x_size,
                                 "y_size": board.y_size,
                                 "board": loc})
         try:
             args = " ".join(self.cmd + ["'"+json_args.replace(' ','')+"'"])
-            return json.loads(subprocess.check_output(args).strip())
+            return json.loads(subprocess.check_output(args, timeout=ClientBot.timeout).strip())
         except Exception as e:
             self.logfile.write("An Error occured running the bot: %s\nException:\n%s\n"%(self, e))
             return {}
