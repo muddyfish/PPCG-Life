@@ -1,6 +1,6 @@
 import requests, json
 from bs4 import BeautifulSoup
-question_id = 59702
+question_id = 83988
 
 def get_answers(q_id, page_id = 1):
     url = 'http://api.stackexchange.com/2.2/questions/%d/answers'%question_id
@@ -52,7 +52,7 @@ def parse_answer(body):
     if not code_xml:
         print "ANSWER DOESN'T HAVE VALID CODE BLOCK", `header`
         return
-    bot_name, language = [part.strip() for part in parts]
+    language, bot_name = [part.strip() for part in parts]
     code = code_xml.get_text()
     extention = get_extention(language)
     if extention == "":
