@@ -83,7 +83,7 @@ class Board(object):
 class Game(object):
     x_size = 2000
     y_size = 2000
-    no_generations = 10000
+    no_generations = 50
     
     def __init__(self, bot_1, bot_2, stop_event):
         cur_time = str(time.time())
@@ -93,6 +93,11 @@ class Game(object):
         random.shuffle(bots)
         self.bot_1,self.bot_2 = bots
         self.ended = False
+        self.play()
+    
+    def play(self):
+        pass
+    
         try:
             self.setup()
         except Exception as e:
@@ -122,7 +127,7 @@ class Game(object):
 
     def tick(self):
         self.log.write("TICK\n")
-        self.log.flush()
+        #self.log.flush()
         #self.board.save("board_%s.png"%(self.tick_id))
         self.get_move(self.bot_1, 1)
         self.get_move(self.bot_2, 2)
@@ -141,3 +146,6 @@ class Game(object):
             self.bot_1.inc_wins(self.bot_2)
         if locs[0] <= locs[1]:
             self.bot_2.inc_wins(self.bot_1)
+            
+if __name__ == "__main__":
+    pass

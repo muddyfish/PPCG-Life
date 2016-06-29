@@ -73,7 +73,7 @@ def save_answer(entry):
         f = open("bots/"+`entry[1]`, "w")
     f.write(entry[4].encode("UTF-8"))
     f.close()
-    return ['sh', './commands/%s.sh'%entry[3].lower(), './bots/%s'%entry[1], entry[0]]
+    return ['sh', "'./commands/%s.sh'"%entry[3].lower(), './bots/%s'%entry[1], entry[0]]
 
 answers = map(save_answer, filter(None,map(parse_answer, get_answer_body())))
 #print(answers)
