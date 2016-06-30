@@ -24,7 +24,7 @@ class Controller(object):
             new_event = threading.Event()
             stop_events.append(new_event)
             
-            thread = threading.Thread(target=Game, args=(bot_1, bot_2, new_event))
+            thread = threading.Thread(target=Game, args=(bot_1, bot_2, new_event, True))
             thread.daemon = False
             thread.start()
             threads.append(thread)

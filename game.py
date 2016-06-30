@@ -72,20 +72,24 @@ class Board(object):
 
         for loc in updated:
             self[loc] = updated[loc]
+        return updated
         
     def update(self, positions, player_id):
+        rtn = []
         for loc in positions:
             loc = tuple(loc)
             if self[loc] == Board.EMPTY:
                 self[loc] = player_id
+                rtn.append(loc)
+        return rtn
         
 
 class Game(object):
-    x_size = 2000
-    y_size = 2000
+    x_size = 1000
+    y_size = 1000
     no_generations = 50
     
-    def __init__(self, bot_1, bot_2, stop_event):
+    def __init__(self, bot_1, bot_2, stop_event, autostart = False):
         cur_time = str(time.time())
         self.log = open("log_%s.log"%cur_time, "w")
         self.stop_event = stop_event
@@ -93,11 +97,10 @@ class Game(object):
         random.shuffle(bots)
         self.bot_1,self.bot_2 = bots
         self.ended = False
-        self.play()
+        if autostart:
+            self.play()
     
     def play(self):
-        pass
-    
         try:
             self.setup()
         except Exception as e:
@@ -120,7 +123,6 @@ class Game(object):
         self.log.write("SETUP GAME %s %s\n"%(self.bot_1, self.bot_2))
         self.setup_board()
         self.tick_id = 0
-        self.start_time = time.time()
 
     def setup_board(self):
         self.board = Board(self.x_size, self.y_size)         
@@ -129,13 +131,13 @@ class Game(object):
         self.log.write("TICK\n")
         #self.log.flush()
         #self.board.save("board_%s.png"%(self.tick_id))
-        self.get_move(self.bot_1, 1)
-        self.get_move(self.bot_2, 2)
-        self.board.tick()
+        bot_1 = self.get_move(self.bot_1, 1)
+        bot_2 = self.get_move(self.bot_2, 2)
         self.tick_id += 1
+        return self.board.tick()
     
     def get_move(self, bot, bid):
-        self.board.update(bot.get_move(bid, self.board), bid)
+        return self.board.update(bot.get_move(bid, self.board), bid)
     
     def end_time(self):
         self.ended = True
