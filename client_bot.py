@@ -29,6 +29,7 @@ class ClientBot(object):
             return json.loads(output)
         except subprocess.TimeoutExpired as e:
             print("Timeout in bot", self)
+            return {}
         except Exception as e:
             try:
                 self.logfile.write("An Error occured running the bot: %s\nException:\n%s\n"%(self, e))
