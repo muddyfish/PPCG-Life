@@ -61,9 +61,13 @@ class Main(object):
         return bot_listbox
         
     def load_answers(self):
-        f = open("answers.json")
-        self.answers = json.load(f)
-        f.close()
+        try:
+            f = open("answers.json")
+        except FileNotFoundError:
+            self.answers = {}
+        else:
+            self.answers = json.load(f)
+            f.close()
     
     def pull_answers(self):
         msg = """This will disconnect all manual answers from the controller

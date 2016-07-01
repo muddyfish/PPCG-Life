@@ -30,7 +30,10 @@ class ClientBot(object):
         except subprocess.TimeoutExpired as e:
             print("Timeout in bot", self)
         except Exception as e:
-            self.logfile.write("An Error occured running the bot: %s\nException:\n%s\n"%(self, e))
+            try:
+                self.logfile.write("An Error occured running the bot: %s\nException:\n%s\n"%(self, e))
+            except AttributeError:
+                print(e)
             return {}
     
     def get_move(self, bot_id, board_data):

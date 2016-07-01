@@ -6,7 +6,7 @@ class Range
   end
 end
 
-args = JSON.parse($*[0])
+args = JSON.parse(ARGV[0])
 bot_id = args["bot_id"]
 width  = args["x_size"]
 height = args["y_size"]
@@ -16,12 +16,12 @@ generator = [[2,2], [2,3], [2,6], [3,2], [3,5], [4,2], [4,5], [4,6], [5,4], [6,2
 
 targets = []
 
-iterations = 100
+iterations = 50
 gen_location = nil
 while !gen_location && iterations > 0
   y = rand height - 9
   x = rand width  - 9
-  temp = (0...9).product(0...9).map{|_y, _x| [y+_y, x+_x]}
+  temp = (0...9).product(0...9).map{|_y, _x| [y + _y, x + _x]}
   if temp.all?{|_y,_x| !board["(#{y},#{x})"]}
     gen_location = temp
     targets += generator.map{|_y, _x| [y + _y, x + _x]}
@@ -34,9 +34,9 @@ enemies = board.keys.reject {|k| board[k] == bot_id}
 interrupts = []
 enemies.each do |location|
   y, x = location.scan(/\d+/).map &:to_i
-  interrupts |= ((y-1)..(y+1)).product((x-1)..(x+1))
+  interrupts |= ((y-1)..(y+1)).product((x-1)..(x+1)).reject{|y, x| gen_location.include?([y,x]) || board["(#{y},#{x})"]}
 end
 
-targets += interrupts.reject{|y, x| gen_location.include?([y,x]) || board["(#{y},#{x})"]}.sample(30 - targets.size)
+targets += interrupts.sample(30 - targets.size)
 
 puts JSON.dump(targets)
