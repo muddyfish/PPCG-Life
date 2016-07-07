@@ -17,16 +17,17 @@ class ClientBot(object):
     def add_log(self, log):
         self.logfile = log
 
-    def run(self, bot_id, board):
+    def run(self, bot_id, board, tick_id):
         loc = {str(key):value for key,value in board.locations.items()}
         json_args = json.dumps({"bot_id": bot_id,
                                 "x_size": board.x_size,
                                 "y_size": board.y_size,
+                                "tick_id":tick_id,
                                 "board": loc})
         try:
             args = " ".join(self.cmd + ["'"+json_args.replace(' ','')+"'"])
             output = str(subprocess.check_output(args, timeout=ClientBot.timeout, shell=True), "ascii").strip()
-            return json.loads(output)
+            return json.loads(output)[:30]
         except subprocess.TimeoutExpired as e:
             print("Timeout in bot", self)
             return {}
@@ -37,9 +38,9 @@ class ClientBot(object):
                 print(e)
             return {}
     
-    def get_move(self, bot_id, board_data):
+    def get_move(self, bot_id, board_data, tick_id):
         #print(self, bot_id, board_data)
-        return self.run(bot_id, board_data)
+        return self.run(bot_id, board_data, tick_id)
     
     def inc_wins(self, other_bot):
         score_file = os.path.join("bot_score", str(self)+".json")

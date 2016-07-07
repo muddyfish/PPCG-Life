@@ -75,19 +75,19 @@ class Board(object):
         return updated
         
     def update(self, positions, player_id):
-        rtn = []
+        rtn = {}
         for loc in positions:
             loc = tuple(loc)
             if self[loc] == Board.EMPTY:
                 self[loc] = player_id
-                rtn.append(loc)
+                rtn[loc] = player_id
         return rtn
         
 
 class Game(object):
     x_size = 1000
     y_size = 1000
-    no_generations = 50
+    no_generations = 1000
     
     def __init__(self, bot_1, bot_2, stop_event, autostart = False):
         cur_time = str(time.time())
@@ -130,14 +130,19 @@ class Game(object):
     def tick(self):
         self.log.write("TICK\n")
         #self.log.flush()
-        #self.board.save("board_%s.png"%(self.tick_id))
+        rtn = {}
         bot_1 = self.get_move(self.bot_1, 1)
         bot_2 = self.get_move(self.bot_2, 2)
+        #self.board.save("board_%s.png"%(self.tick_id))
+        tick = self.board.tick()
         self.tick_id += 1
-        return self.board.tick()
+        rtn.update(bot_1)
+        rtn.update(bot_2)
+        rtn.update(tick)
+        return rtn
     
     def get_move(self, bot, bid):
-        return self.board.update(bot.get_move(bid, self.board), bid)
+        return self.board.update(bot.get_move(bid, self.board, self.tick_id), bid)
     
     def end_time(self):
         self.ended = True
